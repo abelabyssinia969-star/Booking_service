@@ -20,7 +20,11 @@ function requireRoles(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
     const roles = req.user.roles || [];
-    const ok = roles.some((r) => allowedRoles.includes(r) || allowedRoles.includes(r?.name));
+    const userType = req.user.type; // treat user type as an implicit role
+    const ok = (
+      (userType && allowedRoles.includes(userType)) ||
+      roles.some((r) => allowedRoles.includes(r) || allowedRoles.includes(r?.name))
+    );
     if (!ok) return res.status(403).json({ message: 'Forbidden' });
     next();
   };

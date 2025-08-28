@@ -23,7 +23,8 @@ async function estimateFare({ vehicleType = 'mini', pickup, dropoff, durationMin
 
 exports.create = async (req, res) => {
   try {
-    const { passengerId, vehicleType, pickup, dropoff, durationMinutes, waitingMinutes } = req.body;
+    const passengerId = req.user?.id || req.body.passengerId;
+    const { vehicleType, pickup, dropoff, durationMinutes, waitingMinutes } = req.body;
     const est = await estimateFare({ vehicleType, pickup, dropoff, durationMinutes, waitingMinutes });
     const booking = await Booking.create({ passengerId, vehicleType, pickup, dropoff, distanceKm: est.distanceKm, durationMinutes, waitingMinutes, fareEstimated: est.fareEstimated, fareBreakdown: est.fareBreakdown });
     return res.status(201).json(booking);
@@ -31,19 +32,23 @@ exports.create = async (req, res) => {
 }
 
 exports.list = async (req, res) => {
-  try { const data = await Booking.find().sort({ createdAt: -1 }); return res.json(data); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try { const data = await Booking.find({ passengerId: req.user?.id }).sort({ createdAt: -1 }); return res.json(data); } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 exports.get = async (req, res) => {
-  try { const item = await Booking.findById(req.params.id); if (!item) return res.status(404).json({ message: 'Not found' }); return res.json(item); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try { const item = await Booking.findOne({ _id: req.params.id, passengerId: req.user?.id }); if (!item) return res.status(404).json({ message: 'Not found' }); return res.json(item); } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 exports.update = async (req, res) => {
-  try { const item = await Booking.findByIdAndUpdate(req.params.id, req.body, { new: true }); if (!item) return res.status(404).json({ message: 'Not found' }); return res.json(item); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try {
+    const updated = await Booking.findOneAndUpdate({ _id: req.params.id, passengerId: req.user?.id }, req.body, { new: true });
+    if (!updated) return res.status(404).json({ message: 'Not found' });
+    return res.json(updated);
+  } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 exports.remove = async (req, res) => {
-  try { const r = await Booking.findByIdAndDelete(req.params.id); if (!r) return res.status(404).json({ message: 'Not found' }); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try { const r = await Booking.findOneAndDelete({ _id: req.params.id, passengerId: req.user?.id }); if (!r) return res.status(404).json({ message: 'Not found' }); return res.json({ ok: true }); } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 exports.lifecycle = async (req, res) => {
@@ -58,7 +63,7 @@ exports.lifecycle = async (req, res) => {
     if (status === 'completed') { booking.completedAt = new Date(); booking.fareFinal = booking.fareEstimated; }
     await booking.save();
     await TripHistory.create({ bookingId: booking._id, driverId: booking.driverId, passengerId: booking.passengerId, status: booking.status });
-    broadcast('booking:update', { id: booking._id.toString(), status });
+    broadcast('booking:update', { id: booking.id || String(booking._id || ''), status });
     return res.json(booking);
   } catch (e) { return res.status(500).json({ message: e.message }); }
 }
