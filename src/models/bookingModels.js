@@ -46,7 +46,8 @@ const TripHistorySchema = new mongoose.Schema({
 
 const LiveSchema = new mongoose.Schema({
   tripId: { type: mongoose.Schema.Types.ObjectId, ref: 'TripHistory' },
-  driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver', required: true },
+  driverId: { type: mongoose.Schema.Types.ObjectId, ref: 'Driver' },
+  passengerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Passenger' },
   timestamp: { type: Date, default: Date.now },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },

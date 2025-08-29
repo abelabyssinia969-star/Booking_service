@@ -36,33 +36,7 @@
           },
           "response": []
         },
-        {
-          "name": "Driver Register",
-          "request": {
-            "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/driver/register", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","driver","register"] },
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Rider One\",\n  \"phone\": \"+15550123\",\n  \"email\": \"rider@example.com\",\n  \"vehicleType\": \"mini\",\n  \"password\": \"pass123\"\n}" }
-          },
-          "response": []
-        },
-        {
-          "name": "Driver Login",
-          "event": [
-            { "listen": "test", "script": { "exec": [
-              "let json = pm.response.json();",
-              "if (json.token) pm.environment.set('driverToken', json.token);",
-              "if (json.driver && json.driver._id) pm.environment.set('driverId', json.driver._id);"
-            ], "type": "text/javascript" } }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [ { "key": "Content-Type", "value": "application/json" } ],
-            "url": { "raw": "{{baseUrl}}/api/v1/auth/driver/login", "host": ["{{baseUrl}}"], "path": ["api","v1","auth","driver","login"] },
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"rider@example.com\",\n  \"password\": \"pass123\"\n}" }
-          },
-          "response": []
-        },
+        
         {
           "name": "Admin Register",
           "request": {
@@ -95,31 +69,10 @@
     {
       "name": "Drivers",
       "item": [
-        {
-          "name": "Create Driver",
-          "request": {
-            "method": "POST",
-            "header": [ { "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" } ],
-            "url": { "raw": "{{baseUrl}}/api/v1/drivers", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers"] },
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Driver B\",\n  \"phone\": \"+15559000\",\n  \"email\": \"driverb@example.com\",\n  \"password\": \"pass123\",\n  \"vehicleType\": \"sedan\"\n}" }
-          }
-        },
-        {
-          "name": "List Drivers",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/drivers", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers"] } }
-        },
-        {
-          "name": "Available Nearby",
-          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/drivers/available?latitude=8.98&longitude=38.79&radiusKm=5&vehicleType=mini", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","available"], "query": [{"key":"latitude","value":"8.98"},{"key":"longitude","value":"38.79"},{"key":"radiusKm","value":"5"},{"key":"vehicleType","value":"mini"}] } }
-        },
-        {
-          "name": "Set Availability",
-          "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers/{{driverId}}/availability", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","{{driverId}}","availability"] }, "body": {"mode":"raw","raw":"{\n  \"available\": true\n}"} }
-        },
-        {
-          "name": "Update Location",
-          "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers/{{driverId}}/location", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","{{driverId}}","location"] }, "body": {"mode":"raw","raw":"{\n  \"latitude\": 8.98,\n  \"longitude\": 38.79\n}"} }
-        }
+        {"name": "List Drivers (admin/staff)", "request": { "method": "GET", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers"] } }},
+        {"name": "Available Nearby (passenger)", "request": { "method": "GET", "header": [ {"key":"Authorization","value":"Bearer {{passengerToken}}"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers/available?latitude=8.98&longitude=38.79&radiusKm=5&vehicleType=mini", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","available"], "query": [{"key":"latitude","value":"8.98"},{"key":"longitude","value":"38.79"},{"key":"radiusKm","value":"5"},{"key":"vehicleType","value":"mini"}] } }},
+        {"name": "Driver Set Availability", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers/{{driverId}}/availability", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","{{driverId}}","availability"] }, "body": {"mode":"raw","raw":"{\n  \"available\": true\n}"} }},
+        {"name": "Driver Update Location", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/drivers/{{driverId}}/location", "host": ["{{baseUrl}}"], "path": ["api","v1","drivers","{{driverId}}","location"] }, "body": {"mode":"raw","raw":"{\n  \"latitude\": 8.98,\n  \"longitude\": 38.79\n}"} }}
       ]
     },
     {
@@ -132,15 +85,7 @@
     {
       "name": "Bookings",
       "item": [
-        {
-          "name": "Estimate Fare",
-          "request": {
-            "method": "POST",
-            "header": [ {"key":"Content-Type","value":"application/json"} ],
-            "url": { "raw": "{{baseUrl}}/api/v1/bookings/estimate", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","estimate"] },
-            "body": {"mode":"raw","raw":"{\n  \"vehicleType\": \"mini\",\n  \"pickup\": { \"latitude\": 8.98, \"longitude\": 38.79 },\n  \"dropoff\": { \"latitude\": 8.99, \"longitude\": 38.80 },\n  \"durationMinutes\": 20,\n  \"waitingMinutes\": 3\n}"}
-          }
-        },
+        {"name": "Admin Estimate Fare", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/estimate", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","estimate"] }, "body": {"mode":"raw","raw":"{\n  \"vehicleType\": \"mini\",\n  \"pickup\": { \"latitude\": 8.98, \"longitude\": 38.79 },\n  \"dropoff\": { \"latitude\": 8.99, \"longitude\": 38.80 },\n  \"durationMinutes\": 20,\n  \"waitingMinutes\": 3\n}"} }},
         {
           "name": "Create Booking",
           "event": [
@@ -160,22 +105,13 @@
           "name": "List Bookings",
           "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/v1/bookings", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings"] } }
         },
-        {
-          "name": "Booking Lifecycle → accepted",
-          "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"accepted\",\n  \"driverId\": \"{{driverId}}\"\n}"} }
-        },
+        {"name": "Booking Lifecycle → accepted (admin)", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"accepted\",\n  \"driverId\": \"{{driverId}}\"\n}"} }},
         {
           "name": "Assign Booking (Dispatcher)",
           "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/assign", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","assign"] }, "body": {"mode":"raw","raw":"{\n  \"driverId\": \"{{driverId}}\",\n  \"dispatcherId\": \"{{adminId}}\"\n}"} }
         },
-        {
-          "name": "Booking Lifecycle → ongoing",
-          "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"ongoing\"\n}"} }
-        },
-        {
-          "name": "Booking Lifecycle → completed",
-          "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"completed\"\n}"} }
-        }
+        {"name": "Booking Lifecycle → ongoing (admin)", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"ongoing\"\n}"} }},
+        {"name": "Booking Lifecycle → completed (admin)", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{adminToken}}"}, {"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/bookings/{{bookingId}}/lifecycle", "host": ["{{baseUrl}}"], "path": ["api","v1","bookings","{{bookingId}}","lifecycle"] }, "body": {"mode":"raw","raw":"{\n  \"status\": \"completed\"\n}"} }}
       ]
     },
     {
@@ -193,7 +129,8 @@
     {
       "name": "Live",
       "item": [
-        { "name": "Push Position", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/live/push", "host": ["{{baseUrl}}"], "path": ["api","v1","live","push"] }, "body": {"mode":"raw","raw":"{\n  \"driverId\": \"{{driverId}}\",\n  \"latitude\": 8.98,\n  \"longitude\": 38.79,\n  \"status\": \"ongoing\"\n}"} } }
+        { "name": "Driver Push Position", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{driverToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/live/push", "host": ["{{baseUrl}}"], "path": ["api","v1","live","push"] }, "body": {"mode":"raw","raw":"{\n  \"driverId\": \"{{driverId}}\",\n  \"latitude\": 8.98,\n  \"longitude\": 38.79,\n  \"status\": \"ongoing\"\n}"} } },
+        { "name": "Passenger Push Position", "request": { "method": "POST", "header": [ {"key":"Authorization","value":"Bearer {{passengerToken}}"},{"key":"Content-Type","value":"application/json"} ], "url": { "raw": "{{baseUrl}}/api/v1/live/push", "host": ["{{baseUrl}}"], "path": ["api","v1","live","push"] }, "body": {"mode":"raw","raw":"{\n  \"passengerId\": \"{{passengerId}}\",\n  \"latitude\": 8.985,\n  \"longitude\": 38.795,\n  \"status\": \"requested\"\n}"} } }
       ]
     },
     {
