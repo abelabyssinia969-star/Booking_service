@@ -1,44 +1,35 @@
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-function auth(required = true) {
+const authenticate = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Authentication failed: No token provided.' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    req.user = decoded; next();
+  } catch (_) {
+    return res.status(401).json({ message: 'Authentication failed: Invalid token.' });
+  }
+};
+
+const authorize = (...allowedRoles) => {
   return (req, res, next) => {
-    const header = req.headers.authorization || '';
-    const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-    if (!token) {
-      if (required) return res.status(401).json({ message: 'Unauthorized' });
-      return next();
+    if (!req.user) return res.status(403).json({ message: 'Forbidden: No user information found.' });
+    const userRoles = req.user.roles;
+    const userType = req.user.type;
+    let isAuthorized = false;
+    if (Array.isArray(userRoles) && userRoles.length > 0) {
+      isAuthorized = userRoles.some((role) => allowedRoles.includes(role) || allowedRoles.includes(role?.name));
+    } else if (userType) {
+      isAuthorized = allowedRoles.includes(userType);
     }
-    try {
-      const payload = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-      req.user = payload; return next();
-    } catch (err) { return res.status(401).json({ message: 'Invalid token' }); }
+    if (isAuthorized) return next();
+    return res.status(403).json({ message: 'Forbidden: You do not have permission to access this resource.' });
   };
-}
+};
 
-function requireRoles(...allowedRoles) {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-    const roles = req.user.roles || [];
-    const userType = req.user.type; // treat user type as an implicit role
-    const ok = (
-      (userType && allowedRoles.includes(userType)) ||
-      roles.some((r) => allowedRoles.includes(r) || allowedRoles.includes(r?.name))
-    );
-    if (!ok) return res.status(403).json({ message: 'Forbidden' });
-    next();
-  };
-}
-
-function requirePermissions(...perms) {
-  return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: 'Unauthorized' });
-    const userPerms = req.user.permissions || [];
-    const ok = perms.every((p) => userPerms.includes(p));
-    if (!ok) return res.status(403).json({ message: 'Forbidden' });
-    next();
-  };
-}
-
-module.exports = { auth, requireRoles, requirePermissions };
+module.exports = { authenticate, authorize };
 

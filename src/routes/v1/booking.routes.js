@@ -1,18 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../../controllers/booking.controller');
-const { auth, requireRoles } = require('../../middleware/auth');
+const { authenticate, authorize } = require('../../middleware/auth');
 
-router.post('/', auth(), requireRoles('passenger'), ctrl.create);
-router.get('/', auth(), requireRoles('passenger'), ctrl.list);
-router.get('/:id', auth(), requireRoles('passenger'), ctrl.get);
-router.put('/:id', auth(), requireRoles('passenger'), ctrl.update);
-router.delete('/:id', auth(), requireRoles('passenger'), ctrl.remove);
-// passenger-only actions; assignment/lifecycle handled implicitly for passenger
-router.post('/:id/lifecycle', auth(), requireRoles('passenger'), ctrl.lifecycle);
-router.post('/:id/assign', auth(), requireRoles('passenger'), ctrl.assign);
-router.post('/estimate', auth(), requireRoles('passenger'), ctrl.estimate);
-router.get('/vehicle/types', auth(), requireRoles('passenger'), (req, res) => res.json(['mini','sedan','van']));
+router.post('/', authenticate, authorize('passenger'), ctrl.create);
+router.get('/', authenticate, authorize('passenger','admin'), ctrl.list);
+router.get('/:id', authenticate, authorize('passenger','admin'), ctrl.get);
+router.put('/:id', authenticate, authorize('passenger'), ctrl.update);
+router.delete('/:id', authenticate, authorize('passenger'), ctrl.remove);
+// Admin lifecycle and assignment
+router.post('/:id/lifecycle', authenticate, authorize('admin'), ctrl.lifecycle);
+router.post('/:id/assign', authenticate, authorize('admin','staff'), ctrl.assign);
+// Fare estimation by admin
+router.post('/estimate', authenticate, authorize('admin'), ctrl.estimate);
+// Passenger vehicle types
+router.get('/vehicle/types', authenticate, authorize('passenger'), (req, res) => res.json(['mini','sedan','van']));
 
 module.exports = router;
 

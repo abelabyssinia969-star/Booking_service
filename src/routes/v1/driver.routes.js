@@ -1,16 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../../controllers/driver.controller');
-const { auth } = require('../../middleware/auth');
+const { authenticate, authorize } = require('../../middleware/auth');
 
-router.post('/', auth(), ctrl.create);
-router.get('/', auth(false), ctrl.list);
-router.get('/available', auth(false), ctrl.availableNearby);
-router.get('/:id', auth(false), ctrl.get);
-router.put('/:id', auth(), ctrl.update);
-router.delete('/:id', auth(), ctrl.remove);
-router.post('/:id/availability', auth(), ctrl.setAvailability);
-router.post('/:id/location', auth(), ctrl.updateLocation);
+// Remove driver creation via API
+router.get('/', authenticate, authorize('admin','staff'), ctrl.list);
+router.get('/available', authenticate, authorize('admin','staff','passenger'), ctrl.availableNearby);
+router.get('/:id', authenticate, authorize('admin','staff'), ctrl.get);
+// Driver self-service
+router.post('/:id/availability', authenticate, authorize('driver'), ctrl.setAvailability);
+router.post('/:id/location', authenticate, authorize('driver'), ctrl.updateLocation);
 
 module.exports = router;
 

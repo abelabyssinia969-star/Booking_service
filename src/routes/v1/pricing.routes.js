@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../../controllers/pricing.controller');
-const { auth, requireRoles } = require('../../middleware/auth');
+const { authenticate, authorize } = require('../../middleware/auth');
 
-router.post('/', auth(), requireRoles('admin'), ctrl.create);
-router.get('/', auth(false), ctrl.list);
-router.get('/:id', auth(false), ctrl.get);
-router.put('/:id', auth(), requireRoles('admin'), ctrl.updateAndBroadcast);
-router.delete('/:id', auth(), requireRoles('admin'), ctrl.remove);
+router.post('/', authenticate, authorize('admin'), ctrl.create);
+router.get('/', authenticate, authorize('admin'), ctrl.list);
+router.get('/:id', authenticate, authorize('admin'), ctrl.get);
+router.put('/:id', authenticate, authorize('admin'), ctrl.updateAndBroadcast);
+router.delete('/:id', authenticate, authorize('admin'), ctrl.remove);
 
 module.exports = router;
 

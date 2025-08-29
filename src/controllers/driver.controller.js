@@ -4,11 +4,22 @@ const { crudController } = require('./basic.crud');
 const base = crudController(Driver);
 
 async function setAvailability(req, res) {
-  try { const d = await Driver.findByIdAndUpdate(req.params.id, { available: !!req.body.available }, { new: true }); if (!d) return res.status(404).json({ message: 'Not found' }); return res.json(d); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try {
+    const driverId = req.user?.id || req.params.id;
+    const d = await Driver.findByIdAndUpdate(driverId, { available: !!req.body.available }, { new: true });
+    if (!d) return res.status(404).json({ message: 'Not found' });
+    return res.json(d);
+  } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 async function updateLocation(req, res) {
-  try { const { latitude, longitude } = req.body; const d = await Driver.findByIdAndUpdate(req.params.id, { lastKnownLocation: { latitude, longitude } }, { new: true }); if (!d) return res.status(404).json({ message: 'Not found' }); return res.json(d); } catch (e) { return res.status(500).json({ message: e.message }); }
+  try {
+    const driverId = req.user?.id || req.params.id;
+    const { latitude, longitude } = req.body;
+    const d = await Driver.findByIdAndUpdate(driverId, { lastKnownLocation: { latitude, longitude } }, { new: true });
+    if (!d) return res.status(404).json({ message: 'Not found' });
+    return res.json(d);
+  } catch (e) { return res.status(500).json({ message: e.message }); }
 }
 
 async function availableNearby(req, res) {
